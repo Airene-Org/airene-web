@@ -1,0 +1,100 @@
+include:
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/SAST.gitlab-ci.yml
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: "tcp://docker:2375"
+  DOCKER_TLS_CERTDIR: ""
+
+
+image: docker:latest
+services:
+  - docker:dind
+
+
+stages:
+  - build
+  - test
+  - deploy
+
+cache:
+  paths:
+    - node_modules/
+
+build:
+  image: docker:latest
+  stage: build
+  before_script:
+    - docker login $IMAGE_USERNAME.azurecr.io --username $IMAGE_USERNAME --password $IMAGE_PASSWORD
+    - echo "PUBLIC_MAPBOX_ACCESS_TOKEN=$PUBLIC_MAPBOX_ACCESS_TOKEN" > .env
+    - echo "AUTH_SECRET=$AUTH_SECRET" >> .env
+    - echo "KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID" >> .env
+    - echo "KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET" >> .env
+    - echo "KEYCLOAK_ISSUER=$KEYCLOAK_ISSUER" >> .env
+  script:
+    - echo "Publishing the app"
+    - docker build -t $IMAGE_USERNAME.azurecr.io/airene-frontend:$CI_COMMIT_SHORT_SHA .
+    - docker push $IMAGE_USERNAME.azurecr.io/airene-frontend:$CI_COMMIT_SHORT_SHA
+  after_script:
+    - rm .env
+  only:
+    - main
+
+test:
+  image: node:20.9.0
+  stage: test
+  before_script:
+    - npm install
+    - npx playwright install --with-deps
+  script:
+    - echo "Testing the app"
+    - npm run test
+  artifacts:
+    paths:
+      - coverage/
+    reports:
+      junit:
+        - coverage/test-results-unit.xml
+        - coverage/test-results-playwright.xml
+      dependency_scanning:
+        - gl-dependency-scanning-report.json
+      sast:
+        - gl-sast-report.json
+      secret_detection:
+        - gl-secret-detection-report.json
+
+deploy:
+  image: mcr.microsoft.com/azure-cli
+  stage: deploy
+  before_script:
+    - az login --service-principal -u $PRINCIPAL_AZURE_APP_ID -p $PRINCIPAL_AZURE_PASSWORD --tenant $PRINCIPAL_AZURE_TENANT
+    - az extension add --name containerapp --upgrade
+
+  script:
+    - echo "Deploying the app"
+    - tag=$CI_COMMIT_REF_NAME
+    - az containerapp up
+      --name airene-frontend
+      --resource-group int5
+      --location westeurope
+      --environment prod
+      --target-port 3000
+      --ingress external
+      --image "$IMAGE_USERNAME.azurecr.io/airene-frontend:$CI_COMMIT_SHORT_SHA"
+    - az containerapp update --name airene-frontend
+      --resource-group int5
+      --cpu 1
+      --memory 2Gi
+      --min-replicas 0
+      --max-replicas 1
+      --set-env-vars
+      NODE_ENV=production
+      PUBLIC_MAPBOX_ACCESS_TOKEN=$PUBLIC_MAPBOX_ACCESS_TOKEN
+      AUTH_SECRET=$AUTH_SECRET
+      KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
+      KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET
+      KEYCLOAK_ISSUER=$KEYCLOAK_ISSUER
+  only:
+    - main
