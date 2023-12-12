@@ -1,4 +1,5 @@
 import type { PageServerLoad } from './$types';
+import type { MapboxGeoJSONFeature } from 'mapbox-gl';
 
 interface Data {
 	segment_id: string;
@@ -35,6 +36,25 @@ interface Data {
 
 export const load: PageServerLoad = async ({ fetch }) => {
 	const res = await fetch('http://localhost:3000/data');
+	const data: Data[] = await res.json();
 
-	return { data: (await res.json()) as Data[] };
+	const features: MapboxGeoJSONFeature[] = data.map((d) => {
+		const { latitude, longitude, ...properties } = d;
+		properties['total_traffic'] = properties['heavy'] + properties['car'];
+
+		return {
+			type: 'Feature',
+			geometry: {
+				type: 'Point',
+				coordinates: [longitude, latitude]
+			},
+			properties
+		};
+	});
+
+	const geoJson = {
+		type: 'FeatureCollection' as const,
+		features
+	};
+	return { geoJson };
 };
