@@ -47,7 +47,7 @@
 		"bits-ui": "^0.11.6",
 		"clsx": "^2.0.0",
 		"json-server": "^0.17.4",
-		"mapbox-gl": "^3.0.0",
+		"mapbox-gl": "^2.15.0",
 		"radix-icons-svelte": "^1.2.1",
 		"tailwind-merge": "^2.1.0",
 		"tailwind-variants": "^0.1.18"
