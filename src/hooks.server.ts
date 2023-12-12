@@ -36,7 +36,7 @@ const handleAuth = SvelteKitAuth({
 const isAuthenticatedUser: Handle = async ({ event, resolve }) => {
 	const session = await event.locals.getSession();
 	if (!session?.user && event.url.pathname !== '/') {
-		throw redirect(302, '/');
+		throw redirect(302, '/auth/signin');
 	}
 	return resolve(event);
 };
