@@ -6,24 +6,27 @@
     import "mapbox-gl/dist/mapbox-gl.css"
 
     import { onMount, onDestroy } from "svelte";
-    import { Button } from "$lib/components/ui/button/index";
+    import LayerSelector from "./LayerSelector.svelte";
 
     export let data;
 
     let map: Map;
-    let mapContainer: HTMLElement;
+    let mapContainer: HTMLDivElement;
+    type Layer = 'air-quality-points' | 'traffic-points' | "";
+    let activeLayer: Layer = '';
 
-    let isAirQualityLayerVisible = true;
-
-    const toggleLayers = () => {
-        if (map.getLayoutProperty('air-quality-points', 'visibility') === 'visible') {
-            map.setLayoutProperty('air-quality-points', 'visibility', 'none');
-            map.setLayoutProperty('traffic-points', 'visibility', 'visible');
-            isAirQualityLayerVisible = false;
-        } else {
-            map.setLayoutProperty('air-quality-points', 'visibility', 'visible');
-            map.setLayoutProperty('traffic-points', 'visibility', 'none');
-            isAirQualityLayerVisible = true;
+    $: {
+        if (map) {
+            switch (true) {
+                case activeLayer === 'air-quality-points':
+                    map.setLayoutProperty('air-quality-points', 'visibility', 'visible');
+                    map.setLayoutProperty('traffic-points', 'visibility', 'none');
+                    break;
+                case activeLayer === 'traffic-points':
+                    map.setLayoutProperty('air-quality-points', 'visibility', 'none');
+                    map.setLayoutProperty('traffic-points', 'visibility', 'visible');
+                    break;
+            }
         }
     }
 
@@ -97,13 +100,15 @@
                         ['linear'],
                         ['get', 'total_traffic'],
                         0, '#00ff00',
-                        100, '#ffff00',
-                        500, '#ff0000'
+                        100, '#ffff00', // ~ 50th percentile
+                        250, '#ff7f00', // ~ 75th percentile
+                        2000, '#ff0000' // ~ max
                     ],
                 }
             });
         });
     });
+
 
     onDestroy(() => {
         map?.remove();
@@ -112,8 +117,6 @@
 </script>
 
 <div class="relative h-full">
-    <div class="h-full" bind:this={mapContainer} />
-    <Button class="absolute left-2.5 sm:top-14 top-16" on:click={toggleLayers}>
-        Show {isAirQualityLayerVisible ? 'Traffic' : 'Air quality'} data
-    </Button>
+    <div data-testid="map" class="h-full" bind:this={mapContainer} />
+    <LayerSelector class="absolute left-2.5 sm:top-14 top-16" bind:activeLayer />
 </div>
