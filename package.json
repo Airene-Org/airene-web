@@ -46,6 +46,8 @@
 		"@mapbox/mapbox-gl-geocoder": "^5.0.1",
 		"bits-ui": "^0.11.6",
 		"clsx": "^2.0.0",
+		"cmdk-sv": "^0.0.12",
+		"dotenv": "^16.3.1",
 		"json-server": "^0.17.4",
 		"mapbox-gl": "^2.15.0",
 		"radix-icons-svelte": "^1.2.1",

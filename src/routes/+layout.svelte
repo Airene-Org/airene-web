@@ -22,10 +22,10 @@
                     <AvatarFallback>{$page.data.session.user?.name?.split(" ").map(name => name[0]).join("")}</AvatarFallback>
                 </Avatar>
                 <strong>{$page.data.session.user?.name ?? "User"}</strong>
-                <Button on:click={() => signOut()} class="button">Sign out</Button>
+                <Button on:click={() => signOut({callbackUrl: '/'})} class="button">Sign out</Button>
             {:else}
                 <span>You are not signed in</span>
-                <Button on:click={() => signIn("keycloak")}>Sign in via keycloak</Button>
+                <Button on:click={() => signIn("keycloak")}>Sign in</Button>
             {/if}
         </div>
     </div>
