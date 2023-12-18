@@ -7,26 +7,21 @@
 
     import { onMount, onDestroy } from "svelte";
     import LayerSelector from "./LayerSelector.svelte";
+    import { type LayerId, layerIds, layers } from "./layers";
 
     export let data;
 
     let map: Map;
     let mapContainer: HTMLDivElement;
-    type Layer = 'air-quality-points' | 'traffic-points' | "";
+    type Layer = LayerId | "";
     let activeLayer: Layer = '';
 
     $: {
-        if (map) {
-            switch (true) {
-                case activeLayer === 'air-quality-points':
-                    map.setLayoutProperty('air-quality-points', 'visibility', 'visible');
-                    map.setLayoutProperty('traffic-points', 'visibility', 'none');
-                    break;
-                case activeLayer === 'traffic-points':
-                    map.setLayoutProperty('air-quality-points', 'visibility', 'none');
-                    map.setLayoutProperty('traffic-points', 'visibility', 'visible');
-                    break;
-            }
+        if (map && map.loaded()) {
+            layerIds.forEach(layerId => {
+                map.setLayoutProperty(layerId, 'visibility', 'none');
+            });
+            map.setLayoutProperty(activeLayer, 'visibility', 'visible')
         }
     }
 
@@ -47,6 +42,8 @@
 
         const geocoder = new MapboxGeocoder({
             accessToken: PUBLIC_MAPBOX_ACCESS_TOKEN,
+            countries: 'be',
+            placeholder: 'Search for an address...',
             clearAndBlurOnEsc: true,
             marker: subMarker,
             mapboxgl,
@@ -66,49 +63,9 @@
                 data: data.geoJson
             });
 
-            map.addLayer({
-                'id': 'air-quality-points',
-                'type': 'circle',
-                'source': 'air-quality',
-                'layout': {
-                    'visibility': 'visible'
-                },
-                'paint': {
-                    'circle-radius': 6,
-                    'circle-color': [
-                        'interpolate',
-                        ['linear'],
-                        ['get', 'air_quality'],
-                        0, '#00ff00',
-                        0.5, '#ffff00',
-                        1, '#ff0000'
-                    ],
-                },
-            });
-
-            map.addLayer({
-                'id': 'traffic-points',
-                'type': 'circle',
-                'source': 'air-quality',
-                'layout': {
-                    'visibility': 'none'
-                },
-                'paint': {
-                    'circle-radius': 6,
-                    'circle-color': [
-                        'interpolate',
-                        ['linear'],
-                        ['get', 'total_traffic'],
-                        0, '#00ff00',
-                        100, '#ffff00', // ~ 50th percentile
-                        250, '#ff7f00', // ~ 75th percentile
-                        2000, '#ff0000' // ~ max
-                    ],
-                }
-            });
+            layers.map(layer => map.addLayer(layer));
         });
     });
-
 
     onDestroy(() => {
         map?.remove();
@@ -120,3 +77,29 @@
     <div data-testid="map" class="h-full" bind:this={mapContainer} />
     <LayerSelector class="absolute left-2.5 sm:top-14 top-16" bind:activeLayer />
 </div>
+
+<style>
+    /*overriding some mapbox styles*/
+    :global(div.mapboxgl-ctrl-geocoder) {
+        @apply bg-background rounded-md border-secondary ring-1 ring-secondary;
+    }
+    :global(div.mapboxgl-ctrl-geocoder input) {
+        @apply bg-transparent text-foreground rounded-md py-1 h-9;
+    }
+    :global(div.mapboxgl-ctrl-geocoder input:focus) {
+        @apply border-primary text-foreground outline-0 ring-1 ring-primary;
+    }
+    :global(.mapboxgl-ctrl-geocoder .suggestions) {
+        @apply bg-background ring-1 ring-secondary;
+    }
+    :global(.mapboxgl-ctrl-geocoder .suggestions > li > a) {
+        @apply text-foreground;
+    }
+    :global(.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right > *) {
+        @apply bg-transparent text-foreground;
+    }
+    :global(.mapboxgl-ctrl-geocoder .suggestions > .active > a,
+    .mapboxgl-ctrl-geocoder .suggestions > li > a:hover) {
+        @apply bg-accent text-foreground;
+    }
+</style>
