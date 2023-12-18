@@ -5,23 +5,21 @@
     import { Button } from "$lib/components/ui/button";
     import { cn } from "$lib/utils";
     import { tick } from "svelte";
+    import { type LayerId, layerIds } from "./layers";
 
     type $$Props = HTMLFormElement['$$props'];
     let className: $$Props["class"] = undefined;
     export {className as class};
 
-    type Layer = 'air-quality-points' | 'traffic-points' | "";
+    type Layer = LayerId | '';
 
-    const layers: {value: Layer, label: string }[] = [
-        {
-            value: "air-quality-points",
-            label: "Air Quality"
-        },
-        {
-            value: "traffic-points",
-            label: "Traffic"
-        },
-    ];
+    const layers = layerIds.map((layerId) => {
+        const layer = layerId as Layer;
+        return {
+            value: layer,
+            label: layer.slice(0, 1).toUpperCase() + layer.slice(1).replace(/-/g, ' ').replace(/points/g, '')
+        }
+    });
 
     let open = false;
     export let activeLayer = "";

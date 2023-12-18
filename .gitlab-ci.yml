@@ -46,7 +46,7 @@ test:
   image: node:20.9.0
   stage: test
   before_script:
-    - npm install
+    - npm install --legacy-peer-deps
     - npx playwright install --with-deps
   script:
     - echo "Testing the app"
