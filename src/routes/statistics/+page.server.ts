@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import type { ChartDataset, Point } from 'chart.js';
 import { fromDate, getLocalTimeZone } from '@internationalized/date';
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { dev } from '$app/environment';
 import { type Data, labels } from './dataLabels';
 
@@ -42,6 +42,14 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 	anomalyUrl.searchParams.set('radius', distance.toString());
 
 	const [dataRes, anomalyRes] = await Promise.all([fetch(dataUrl), fetch(anomalyUrl)]);
+
+	if (!dataRes.ok) {
+		throw error(dataRes.status, dataRes.statusText);
+	}
+	if (!anomalyRes.ok) {
+		throw error(anomalyRes.status, anomalyRes.statusText);
+	}
+
 	// TODO: update type of fetchedAnomalies
 	const [fetchedData, fetchedAnomalies]: [fetchedData: Data, fetchedAnomalies: unknown] =
 		await Promise.all([dataRes.json(), anomalyRes.json()]);
