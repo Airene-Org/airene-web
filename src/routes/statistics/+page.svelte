@@ -139,6 +139,15 @@
 
     export let data;
 
+    let addressInput: HTMLInputElement | null;
+
+    onMount(() => {
+        // adding id to location input for accessibility
+        addressInput = document.querySelector(".mapboxgl-ctrl-geocoder--input");
+        if (!addressInput) return;
+        addressInput.id = "location";
+    })
+
 </script>
 
 <svelte:window on:mousemove={onMouseMove} />
