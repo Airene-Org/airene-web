@@ -73,6 +73,10 @@
 
 </script>
 
+<svelte:head>
+    <title>Map</title>
+</svelte:head>
+
 <div class="relative h-full">
     <div data-testid="map" class="h-full" bind:this={mapContainer} />
     <LayerSelector class="absolute left-2.5 sm:top-14 top-16" bind:activeLayer />
