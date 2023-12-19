@@ -1,5 +1,6 @@
 <script lang="ts">
     import { PUBLIC_MAPBOX_ACCESS_TOKEN } from "$env/static/public"
+    import { mode } from 'mode-watcher'
     import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
     import mapboxgl, { GeolocateControl, Map, Marker, Popup } from "mapbox-gl";
     import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
@@ -31,7 +32,7 @@
         map = new Map({
             container: mapContainer,
             accessToken: PUBLIC_MAPBOX_ACCESS_TOKEN,
-            style: 'mapbox://styles/mapbox/dark-v10',
+            style: $mode === 'dark' ? 'mapbox://styles/mapbox/dark-v10' : 'mapbox://styles/mapbox/light-v10',
             center: [initialState.lng, initialState.lat],
             zoom: initialState.zoom,
         });
@@ -70,6 +71,10 @@
     onDestroy(() => {
         map?.remove();
     });
+
+    $: $mode === 'dark'
+        ? map?.setStyle('mapbox://styles/mapbox/dark-v10')
+        : map?.setStyle('mapbox://styles/mapbox/light-v10')
 
 </script>
 

@@ -157,14 +157,14 @@
     <meta name="description" content="Statistics about air quality and traffic" />
 </svelte:head>
 
-<div class="flex max-w-fit gap-4 m-auto my-12">
+<div class="max-w-fit gap-4 m-auto my-12 justify-center grid grid-cols-2 lg:flex">
     <div>
         <Label for="location">Address</Label>
         <div bind:this={autoCompleteElement}></div>
     </div>
 
     <div>
-        <Label for="distance">Distance radius</Label>
+        <Label class="whitespace-nowrap" for="distance">Distance radius</Label>
         <Input id="distance" bind:value={$distance} type="number" />
     </div>
 
@@ -187,7 +187,7 @@
 
     <div>
         <Label for="mode">Type</Label>
-        <ToggleGroup bind:value={$mode} type="single">
+        <ToggleGroup class="justify-start" bind:value={$mode} type="single">
             {#each modeOptions as option (option.value)}
                 <ToggleGroupItem value={option.value}>{option.label}
                 </ToggleGroupItem>
@@ -214,13 +214,13 @@
 <style>
     /*overriding some mapbox styles*/
     :global(div.mapboxgl-ctrl-geocoder) {
-        @apply bg-background rounded-md border-secondary ring-1 ring-secondary;
+        @apply bg-background rounded-md border-s ring-1 ring-input;
     }
     :global(div.mapboxgl-ctrl-geocoder input) {
-        @apply bg-transparent text-foreground rounded-md py-1 h-9;
+        @apply bg-transparent text-foreground rounded-md py-1 h-9 border-s border-input;
     }
     :global(div.mapboxgl-ctrl-geocoder input:focus) {
-        @apply border-primary text-foreground outline-0 ring-1 ring-primary;
+        @apply text-foreground outline-0 ring-1 ring-primary border-s border-primary;
     }
     :global(.mapboxgl-ctrl-geocoder .suggestions) {
         @apply bg-background ring-1 ring-secondary;
