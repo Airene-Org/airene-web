@@ -1,10 +1,11 @@
 import { KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER } from '$env/static/private';
 
-import type { Handle, HandleFetch } from '@sveltejs/kit';
+import { error, type Handle, type HandleFetch } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { redirect } from '@sveltejs/kit';
 import { SvelteKitAuth } from '@auth/sveltekit';
 import Keycloak from '@auth/core/providers/keycloak';
+import type { JWT } from '@auth/core/jwt';
 
 const handleAuth = SvelteKitAuth({
 	providers: [
@@ -16,10 +17,17 @@ const handleAuth = SvelteKitAuth({
 	],
 	callbacks: {
 		jwt: async ({ token, account }) => {
+			console.log(account);
+			console.log(token);
 			if (account) {
 				token.access_token = account.access_token;
+				token.access_token_expires = Date.now() + (account.expires_in ?? 0) * 1000;
+				token.refresh_token = account.refresh_token;
 			}
-			return token;
+			if (Date.now() < (token.accessTokenExpires as number) ?? 0) {
+				return token;
+			}
+			return refreshAccessToken(token);
 		},
 		session: async ({ session, token }) => {
 			if (session) {
@@ -32,6 +40,47 @@ const handleAuth = SvelteKitAuth({
 	},
 	trustHost: true
 });
+
+async function refreshAccessToken(token: JWT) {
+	console.log('Refreshing access token');
+	console.log(token);
+	if (Date.now() > (token.refreshTokenExpired as number) ?? 0)
+		throw error(500, 'Refresh token expired');
+	const url = new URL(`${KEYCLOAK_ISSUER}/protocol/openid-connect/token`);
+	const details = {
+		client_id: KEYCLOAK_CLIENT_ID,
+		client_secret: KEYCLOAK_CLIENT_SECRET,
+		grant_type: ['refresh_token'],
+		refresh_token: token.refresh_token
+	};
+	const body = Object.entries(details)
+		.map(([key, value]: [string, any]) => {
+			const encodedKey = encodeURIComponent(key);
+			const encodedValue = encodeURIComponent(value);
+			return `${encodedKey}=${encodedValue}`;
+		})
+		.join('&');
+	const response = await fetch(url, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+		},
+		body
+	});
+
+	const refreshedTokens = await response.json();
+	console.log('refreshedTokens', refreshedTokens);
+
+	if (!response.ok) {
+		throw refreshedTokens;
+	}
+	return {
+		...token,
+		access_token: refreshedTokens.access_token,
+		access_token_expires: Date.now() + refreshedTokens.expires_in * 1000,
+		refresh_token: refreshedTokens.refresh_token ?? token.refreshToken // Fall back to old refresh token
+	};
+}
 
 const isAuthenticatedUser: Handle = async ({ event, resolve }) => {
 	const session = await event.locals.getSession();
