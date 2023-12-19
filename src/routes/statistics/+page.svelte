@@ -37,6 +37,7 @@
     import { Line } from 'svelte-chartjs';
 
     import annotationPlugin from 'chartjs-plugin-annotation';
+    import { Label } from "$lib/components/ui/label";
     ChartJS.register(
         Title,
         Tooltip,
@@ -138,6 +139,15 @@
 
     export let data;
 
+    let addressInput: HTMLInputElement | null;
+
+    onMount(() => {
+        // adding id to location input for accessibility
+        addressInput = document.querySelector(".mapboxgl-ctrl-geocoder--input");
+        if (!addressInput) return;
+        addressInput.id = "location";
+    })
+
 </script>
 
 <svelte:window on:mousemove={onMouseMove} />
@@ -148,30 +158,42 @@
 </svelte:head>
 
 <div class="flex max-w-fit gap-4 m-auto my-12">
-    <div bind:this={autoCompleteElement}></div>
+    <div>
+        <Label for="location">Address</Label>
+        <div bind:this={autoCompleteElement}></div>
+    </div>
 
-    <Input bind:value={$distance} type="number" />
+    <div>
+        <Label for="distance">Distance radius</Label>
+        <Input id="distance" bind:value={$distance} type="number" />
+    </div>
 
-    <Popover.Root>
-        <Popover.Trigger asChild let:builder>
-            <Button variant="outline"
-                    class={cn( "w-[240px] justify-start text-left font-normal", !$date && "text-muted-foreground" )}
-                    builders={[builder]}>
-                <CalendarIcon class="mr-2 h-4 w-4" />
-                {$date ?  df.format($date.toDate(getLocalTimeZone())) : "Pick a date"}
-            </Button>
-        </Popover.Trigger>
-        <Popover.Content class="w-auto p-0" align="start">
-            <Calendar bind:value={$date} />
-        </Popover.Content>
-    </Popover.Root>
+    <div class="flex flex-col justify-end">
+        <Label for="date" class="block">Date</Label>
+        <Popover.Root>
+            <Popover.Trigger id="date" asChild let:builder>
+                <Button variant="outline"
+                        class={cn( "w-[240px] justify-start text-left font-normal mt-1", !$date && "text-muted-foreground" )}
+                        builders={[builder]}>
+                    <CalendarIcon class="mr-2 h-4 w-4"/>
+                    {$date ? df.format($date.toDate(getLocalTimeZone())) : "Pick a date"}
+                </Button>
+            </Popover.Trigger>
+            <Popover.Content class="w-auto" align="start">
+                <Calendar bind:value={$date}/>
+            </Popover.Content>
+        </Popover.Root>
+    </div>
 
-    <ToggleGroup bind:value={$mode} type="single">
-        {#each modeOptions as option (option.value)}
-            <ToggleGroupItem value={option.value}>{option.label}
-            </ToggleGroupItem>
-        {/each}
-    </ToggleGroup>
+    <div>
+        <Label for="mode">Type</Label>
+        <ToggleGroup bind:value={$mode} type="single">
+            {#each modeOptions as option (option.value)}
+                <ToggleGroupItem value={option.value}>{option.label}
+                </ToggleGroupItem>
+            {/each}
+        </ToggleGroup>
+    </div>
 </div>
 
 {#if location && data.data}
