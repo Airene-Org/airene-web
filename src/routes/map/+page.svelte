@@ -52,6 +52,11 @@
 
         map.on('style.load', () => {
             map.setFog({}); // Set the default atmosphere style
+            map.addSource('air-quality', {
+                type: 'geojson',
+                data: data.geoJson
+            });
+            layers.map(layer => map.addLayer(layer));
         });
 
         map.addControl(new GeolocateControl({ showUserLocation: true }))
@@ -63,7 +68,6 @@
                 type: 'geojson',
                 data: data.geoJson
             });
-
             layers.map(layer => map.addLayer(layer));
         });
     });
