@@ -17,14 +17,12 @@ const handleAuth = SvelteKitAuth({
 	],
 	callbacks: {
 		jwt: async ({ token, account }) => {
-			console.log(account);
-			console.log(token);
 			if (account) {
 				token.access_token = account.access_token;
 				token.access_token_expires = Date.now() + (account.expires_in ?? 0) * 1000;
 				token.refresh_token = account.refresh_token;
 			}
-			if (Date.now() < (token.accessTokenExpires as number) ?? 0) {
+			if (Date.now() < (token.access_token_expires as number) ?? 0) {
 				return token;
 			}
 			return refreshAccessToken(token);
@@ -42,10 +40,9 @@ const handleAuth = SvelteKitAuth({
 });
 
 async function refreshAccessToken(token: JWT) {
-	console.log('Refreshing access token');
-	console.log(token);
 	if (Date.now() > (token.refreshTokenExpired as number) ?? 0)
 		throw error(500, 'Refresh token expired');
+
 	const url = new URL(`${KEYCLOAK_ISSUER}/protocol/openid-connect/token`);
 	const details = {
 		client_id: KEYCLOAK_CLIENT_ID,
@@ -60,6 +57,7 @@ async function refreshAccessToken(token: JWT) {
 			return `${encodedKey}=${encodedValue}`;
 		})
 		.join('&');
+
 	const response = await fetch(url, {
 		method: 'POST',
 		headers: {
@@ -68,17 +66,17 @@ async function refreshAccessToken(token: JWT) {
 		body
 	});
 
-	const refreshedTokens = await response.json();
-	console.log('refreshedTokens', refreshedTokens);
-
 	if (!response.ok) {
-		throw refreshedTokens;
+		throw error(response.status, response.statusText);
 	}
+
+	const refreshedTokens = await response.json();
+
 	return {
 		...token,
 		access_token: refreshedTokens.access_token,
 		access_token_expires: Date.now() + refreshedTokens.expires_in * 1000,
-		refresh_token: refreshedTokens.refresh_token ?? token.refreshToken // Fall back to old refresh token
+		refresh_token: refreshedTokens.refresh_token ?? token.refresh_token // Fall back to old refresh token
 	};
 }
 
