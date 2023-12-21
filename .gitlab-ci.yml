@@ -64,6 +64,8 @@ test:
         - gl-sast-report.json
       secret_detection:
         - gl-secret-detection-report.json
+  only:
+    - main
 
 deploy:
   image: mcr.microsoft.com/azure-cli
@@ -84,12 +86,12 @@ deploy:
       --ingress external
       --image "$IMAGE_USERNAME.azurecr.io/airene-frontend:$CI_COMMIT_SHORT_SHA"
     - az containerapp secret set --name airene-frontend --resource-group int5 --secrets
-      MAPBOX_ACCESS_TOKEN=$PUBLIC_MAPBOX_ACCESS_TOKEN
-      AUTH_SECRET=$AUTH_SECRET
-      KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
-      KEYCLOAK_CLIENT_SEC=$KEYCLOAK_CLIENT_SECRET
-      KEYCLOAK_ISSUER=$KEYCLOAK_ISSUER
-      PUBLIC_TEST_VAR=$PUBLIC_TEST_VAR
+      mapbox-access-token=$PUBLIC_MAPBOX_ACCESS_TOKEN
+      auth-secret=$AUTH_SECRET
+      keycloak-client-id=$KEYCLOAK_CLIENT_ID
+      keycloak-client-sec=$KEYCLOAK_CLIENT_SECRET
+      keycloak-issuer=$KEYCLOAK_ISSUER
+      public-test-var=$PUBLIC_TEST_VAR
     - az containerapp update --name airene-frontend
       --resource-group int5
       --cpu 1
@@ -98,11 +100,11 @@ deploy:
       --max-replicas 1
       --set-env-vars
       NODE_ENV=production
-      PUBLIC_MAPBOX_ACCESS_TOKEN=secretref:MAPBOX_ACCESS_TOKEN
-      AUTH_SECRET=secretref:AUTH_SECRET
-      KEYCLOAK_CLIENT_ID=secretref:KEYCLOAK_CLIENT_ID
-      KEYCLOAK_CLIENT_SECRET=secretref:KEYCLOAK_CLIENT_SEC
-      KEYCLOAK_ISSUER=secretref:KEYCLOAK_ISSUER
-      PUBLIC_TEST_VAR=secretref:PUBLIC_TEST_VAR
+      PUBLIC_MAPBOX_ACCESS_TOKEN=secretref:mapbox-access-token
+      AUTH_SECRET=secretref:auth-secret
+      KEYCLOAK_CLIENT_ID=secretref:keycloak-client-id
+      KEYCLOAK_CLIENT_SECRET=secretref:keycloak-client-sec
+      KEYCLOAK_ISSUER=secretref:keycloak-issuer
+      PUBLIC_TEST_VAR=secretref:public-test-var
 #  only:
 #    - main
