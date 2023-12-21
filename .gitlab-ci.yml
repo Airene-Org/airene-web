@@ -39,8 +39,8 @@ build:
     - docker push $IMAGE_USERNAME.azurecr.io/airene-frontend:$CI_COMMIT_SHORT_SHA
   after_script:
     - rm .env
-#  only:
-#    - main
+  only:
+    - main
 
 test:
   image: node:20.9.0
@@ -64,8 +64,8 @@ test:
         - gl-sast-report.json
       secret_detection:
         - gl-secret-detection-report.json
-  only:
-    - main
+#  only:
+#    - main
 
 deploy:
   image: mcr.microsoft.com/azure-cli
@@ -106,5 +106,5 @@ deploy:
       KEYCLOAK_CLIENT_SECRET=secretref:keycloak-client-sec
       KEYCLOAK_ISSUER=secretref:keycloak-issuer
       PUBLIC_TEST_VAR=secretref:public-test-var
-#  only:
-#    - main
+  only:
+    - main

@@ -9,7 +9,6 @@ export let form: ActionData;
 <div class="m-2">
     <form method="POST">
         <Button type="submit">Hit backend</Button>
-        <p>{env.PUBLIC_TEST_VAR}</p>
         {#if !form}
             <p>Go on, hit it</p>
         {:else if form.success}
