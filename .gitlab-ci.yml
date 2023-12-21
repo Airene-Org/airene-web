@@ -39,8 +39,8 @@ build:
     - docker push $IMAGE_USERNAME.azurecr.io/airene-frontend:$CI_COMMIT_SHORT_SHA
   after_script:
     - rm .env
-  only:
-    - main
+#  only:
+#    - main
 
 test:
   image: node:20.9.0
@@ -83,6 +83,13 @@ deploy:
       --target-port 3000
       --ingress external
       --image "$IMAGE_USERNAME.azurecr.io/airene-frontend:$CI_COMMIT_SHORT_SHA"
+    - az containerapp secret set --name airene-frontend --resource-group int5 --secrets
+      PUBLIC_MAPBOX_ACCESS_TOKEN=$PUBLIC_MAPBOX_ACCESS_TOKEN
+      AUTH_SECRET=$AUTH_SECRET
+      KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
+      KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET
+      KEYCLOAK_ISSUER=$KEYCLOAK_ISSUER
+      PUBLIC_TEST_VAR=$PUBLIC_TEST_VAR
     - az containerapp update --name airene-frontend
       --resource-group int5
       --cpu 1
@@ -91,10 +98,11 @@ deploy:
       --max-replicas 1
       --set-env-vars
       NODE_ENV=production
-      PUBLIC_MAPBOX_ACCESS_TOKEN=$PUBLIC_MAPBOX_ACCESS_TOKEN
-      AUTH_SECRET=$AUTH_SECRET
-      KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
-      KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET
-      KEYCLOAK_ISSUER=$KEYCLOAK_ISSUER
-  only:
-    - main
+      PUBLIC_MAPBOX_ACCESS_TOKEN=secretref:PUBLIC_MAPBOX_ACCESS_TOKEN
+      AUTH_SECRET=secretref:AUTH_SECRET
+      KEYCLOAK_CLIENT_ID=secretref:KEYCLOAK_CLIENT_ID
+      KEYCLOAK_CLIENT_SECRET=secretref:KEYCLOAK_CLIENT_SECRET
+      KEYCLOAK_ISSUER=secretref:KEYCLOAK_ISSUER
+      PUBLIC_TEST_VAR=secretref:PUBLIC_TEST_VAR
+#  only:
+#    - main

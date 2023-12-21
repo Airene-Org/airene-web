@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Button } from "$lib/components/ui/button/index";
 import type { ActionData } from "./$types"
+import { env } from "$env/dynamic/public";
 
 export let form: ActionData;
 </script>
@@ -8,6 +9,7 @@ export let form: ActionData;
 <div class="m-2">
     <form method="POST">
         <Button type="submit">Hit backend</Button>
+        <p>{env.PUBLIC_TEST_VAR}</p>
         {#if !form}
             <p>Go on, hit it</p>
         {:else if form.success}
