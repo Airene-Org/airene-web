@@ -8,6 +8,7 @@
 
     import { onMount, onDestroy } from "svelte";
     import LayerSelector from "./LayerSelector.svelte";
+    import Legend from "./Legend.svelte";
     import { type LayerId, layerIds, layers } from "./layers";
 
     export let data;
@@ -56,7 +57,15 @@
                 type: 'geojson',
                 data: data.geoJson
             });
-            layers.map(layer => map.addLayer(layer));
+            layers.map(layer => {
+                if (!layer.layout) return;
+                if (layer.id === activeLayer || (activeLayer === '' && layer.id === 'air-quality-points')) {
+                    layer.layout.visibility = 'visible'
+                } else {
+                    layer.layout.visibility = 'none'
+                }
+                map.addLayer(layer, 'road-label')
+            });
         });
 
         map.addControl(new GeolocateControl({ showUserLocation: true }))
@@ -68,7 +77,7 @@
                 type: 'geojson',
                 data: data.geoJson
             });
-            layers.map(layer => map.addLayer(layer));
+            layers.map(layer => map.addLayer(layer, 'road-label'));
         });
     });
 
@@ -89,6 +98,7 @@
 <div class="relative h-full">
     <div data-testid="map" class="h-full" bind:this={mapContainer} />
     <LayerSelector class="absolute left-2.5 sm:top-14 top-16" bind:activeLayer />
+    <Legend bind:activeLayer />
 </div>
 
 <style>

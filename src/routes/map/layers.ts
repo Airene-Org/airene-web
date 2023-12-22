@@ -1,6 +1,6 @@
-import type { AnyLayer } from 'mapbox-gl';
+import type { CircleLayer } from 'mapbox-gl';
 
-export const layers: AnyLayer[] = [
+export const layers: CircleLayer[] = [
 	{
 		id: 'air-quality-points',
 		type: 'circle',

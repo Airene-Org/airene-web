@@ -48,12 +48,12 @@ async function refreshAccessToken(token: JWT) {
 		client_id: KEYCLOAK_CLIENT_ID,
 		client_secret: KEYCLOAK_CLIENT_SECRET,
 		grant_type: ['refresh_token'],
-		refresh_token: token.refresh_token
+		refresh_token: token.refresh_token as string
 	};
 	const body = Object.entries(details)
-		.map(([key, value]: [string, any]) => {
+		.map(([key, value]: [string, (typeof details)[keyof typeof details]]) => {
 			const encodedKey = encodeURIComponent(key);
-			const encodedValue = encodeURIComponent(value);
+			const encodedValue = encodeURIComponent(value.toString());
 			return `${encodedKey}=${encodedValue}`;
 		})
 		.join('&');
