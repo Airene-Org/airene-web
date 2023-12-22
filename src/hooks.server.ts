@@ -1,4 +1,4 @@
-import { KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER } from '$env/static/private';
+import { KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER, BACKEND_URL } from '$env/static/private';
 
 import { error, type Handle, type HandleFetch } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
@@ -6,6 +6,7 @@ import { redirect } from '@sveltejs/kit';
 import { SvelteKitAuth } from '@auth/sveltekit';
 import Keycloak from '@auth/core/providers/keycloak';
 import type { JWT } from '@auth/core/jwt';
+import { dev } from '$app/environment';
 
 const handleAuth = SvelteKitAuth({
 	providers: [
@@ -26,6 +27,17 @@ const handleAuth = SvelteKitAuth({
 				return token;
 			}
 			return refreshAccessToken(token);
+		},
+		signIn: async ({ user}) => {
+			const url = dev ? 'http://localhost:8080/api/users' : `${BACKEND_URL}/api/users`;
+			const req = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(user)
+			});
+			return req.ok;
 		},
 		session: async ({ session, token }) => {
 			if (session) {
@@ -89,6 +101,9 @@ const isAuthenticatedUser: Handle = async ({ event, resolve }) => {
 };
 
 export const handleFetch: HandleFetch = async ({ request, event }) => {
+	if(request.url.includes('api/users')) {
+		return fetch(request);
+	}
 	const session = await event.locals.getSession();
 	const token = session?.access_token;
 	if (!token) {

@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import type { MapboxGeoJSONFeature } from 'mapbox-gl';
+import { BACKEND_URL } from '$env/static/private';
 import { dev } from '$app/environment';
 import { error } from '@sveltejs/kit';
 
@@ -45,7 +46,7 @@ interface Data {
 
 export const load: PageServerLoad = async ({ fetch }) => {
 	const res = await fetch(
-		dev ? 'http://localhost:8080/api/locations' : 'https://airene-backend.sharppy.win/api/locations'
+		dev ? 'http://localhost:8080/api/locations' : `${BACKEND_URL}/api/locations`
 	);
 
 	if (res.status === 401) {

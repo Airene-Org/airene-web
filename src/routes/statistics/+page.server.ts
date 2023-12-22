@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '$env/static/private';
 import type { PageServerLoad } from './$types';
 import type { ChartDataset, Point } from 'chart.js';
 import { fromDate, getLocalTimeZone } from '@internationalized/date';
@@ -24,7 +25,7 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 	const distance = Number(url.searchParams.get('distance'));
 
 	const dataUrl = new URL(
-		dev ? 'http://localhost:8080/api/data' : 'https://airene-backend.sharppy.win/api/data'
+		dev ? 'http://localhost:8080/api/data' : `${BACKEND_URL}/api/data`
 	);
 
 	dataUrl.searchParams.set('longitude', lng.toString());
@@ -33,7 +34,7 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 	dataUrl.searchParams.set('radius', distance.toString());
 
 	const anomalyUrl = new URL(
-		dev ? 'http://localhost:8080/api/anomalies' : 'https://airene-backend.sharppy.win/api/anomalies'
+		dev ? 'http://localhost:8080/api/anomalies' : `${BACKEND_URL}/api/anomalies`
 	);
 
 	anomalyUrl.searchParams.set('longitude', lng.toString());
