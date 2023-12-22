@@ -3,7 +3,6 @@ import type { PageServerLoad } from './$types';
 import type { ChartDataset, Point } from 'chart.js';
 import { fromDate, getLocalTimeZone } from '@internationalized/date';
 import { error, redirect } from '@sveltejs/kit';
-import { dev } from '$app/environment';
 import { type Data, labels } from './dataLabels';
 
 export const load: PageServerLoad = async ({ url, fetch }) => {
@@ -24,18 +23,14 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 
 	const distance = Number(url.searchParams.get('distance'));
 
-	const dataUrl = new URL(
-		dev ? 'http://localhost:8080/api/data' : `${BACKEND_URL}/api/data`
-	);
+	const dataUrl = new URL(`${BACKEND_URL}/api/data`);
 
 	dataUrl.searchParams.set('longitude', lng.toString());
 	dataUrl.searchParams.set('latitude', lat.toString());
 	dataUrl.searchParams.set('date', date.toISOString().slice(0, 10));
 	dataUrl.searchParams.set('radius', distance.toString());
 
-	const anomalyUrl = new URL(
-		dev ? 'http://localhost:8080/api/anomalies' : `${BACKEND_URL}/api/anomalies`
-	);
+	const anomalyUrl = new URL(`${BACKEND_URL}/api/anomalies`);
 
 	anomalyUrl.searchParams.set('longitude', lng.toString());
 	anomalyUrl.searchParams.set('latitude', lat.toString());

@@ -6,7 +6,6 @@ import { redirect } from '@sveltejs/kit';
 import { SvelteKitAuth } from '@auth/sveltekit';
 import Keycloak from '@auth/core/providers/keycloak';
 import type { JWT } from '@auth/core/jwt';
-import { dev } from '$app/environment';
 
 const handleAuth = SvelteKitAuth({
 	providers: [
@@ -29,7 +28,7 @@ const handleAuth = SvelteKitAuth({
 			return refreshAccessToken(token);
 		},
 		signIn: async ({ user}) => {
-			const url = dev ? 'http://localhost:8080/api/users' : `${BACKEND_URL}/api/users`;
+			const url = `${BACKEND_URL}/api/users`;
 			const req = await fetch(url, {
 				method: 'POST',
 				headers: {
