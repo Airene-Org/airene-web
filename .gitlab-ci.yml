@@ -33,6 +33,7 @@ build:
     - echo "KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID" >> .env
     - echo "KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET" >> .env
     - echo "KEYCLOAK_ISSUER=$KEYCLOAK_ISSUER" >> .env
+    - echo "BACKEND_URL=$BACKEND_URL" >> .env
   script:
     - echo "Publishing the app"
     - docker build -t $IMAGE_USERNAME.azurecr.io/airene-frontend:$CI_COMMIT_SHORT_SHA .
@@ -91,6 +92,7 @@ deploy:
       keycloak-client-id=$KEYCLOAK_CLIENT_ID
       keycloak-client-sec=$KEYCLOAK_CLIENT_SECRET
       keycloak-issuer=$KEYCLOAK_ISSUER
+      backend-url=$BACKEND_URL
     - az containerapp update --name airene-frontend
       --resource-group int5
       --cpu 1
@@ -104,5 +106,6 @@ deploy:
       KEYCLOAK_CLIENT_ID=secretref:keycloak-client-id
       KEYCLOAK_CLIENT_SECRET=secretref:keycloak-client-sec
       KEYCLOAK_ISSUER=secretref:keycloak-issuer
+      BACKEND_URL=secretref:backend-url
   only:
     - main
