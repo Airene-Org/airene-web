@@ -91,7 +91,6 @@ deploy:
       keycloak-client-id=$KEYCLOAK_CLIENT_ID
       keycloak-client-sec=$KEYCLOAK_CLIENT_SECRET
       keycloak-issuer=$KEYCLOAK_ISSUER
-      public-test-var=$PUBLIC_TEST_VAR
     - az containerapp update --name airene-frontend
       --resource-group int5
       --cpu 1
@@ -105,6 +104,5 @@ deploy:
       KEYCLOAK_CLIENT_ID=secretref:keycloak-client-id
       KEYCLOAK_CLIENT_SECRET=secretref:keycloak-client-sec
       KEYCLOAK_ISSUER=secretref:keycloak-issuer
-      PUBLIC_TEST_VAR=secretref:public-test-var
   only:
     - main

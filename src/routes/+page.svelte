@@ -1,7 +1,6 @@
 <script lang="ts">
 import { Button } from "$lib/components/ui/button/index";
 import type { ActionData } from "./$types"
-import { env } from "$env/dynamic/public";
 
 export let form: ActionData;
 </script>
