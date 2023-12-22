@@ -1,4 +1,4 @@
-import { KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER } from '$env/static/private';
+import { KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER, BACKEND_URL } from '$env/static/private';
 
 import { error, type Handle, type HandleFetch } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
@@ -26,6 +26,17 @@ const handleAuth = SvelteKitAuth({
 				return token;
 			}
 			return refreshAccessToken(token);
+		},
+		signIn: async ({ user}) => {
+			const url = `${BACKEND_URL}/api/users`;
+			const req = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(user)
+			});
+			return req.ok;
 		},
 		session: async ({ session, token }) => {
 			if (session) {
@@ -89,6 +100,9 @@ const isAuthenticatedUser: Handle = async ({ event, resolve }) => {
 };
 
 export const handleFetch: HandleFetch = async ({ request, event }) => {
+	if(request.url.includes('api/users')) {
+		return fetch(request);
+	}
 	const session = await event.locals.getSession();
 	const token = session?.access_token;
 	if (!token) {
