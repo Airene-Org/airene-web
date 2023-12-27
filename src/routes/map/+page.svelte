@@ -119,7 +119,7 @@
         map.on('contextmenu', (e) => {
             latitude = e.lngLat.lat
             longitude = e.lngLat.lng
-            address = ''
+            geocoder.query(`${latitude}, ${longitude}`)
             subMarker.setPopup(popup.setDOMContent(popupEl))
             subMarker.setLngLat([longitude, latitude]).addTo(map)
             popupEl.classList.remove('hidden')
