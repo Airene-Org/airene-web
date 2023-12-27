@@ -7,16 +7,36 @@
     import "mapbox-gl/dist/mapbox-gl.css"
 
     import { onMount, onDestroy } from "svelte";
+    import { enhance } from "$app/forms";
     import LayerSelector from "./LayerSelector.svelte";
     import Legend from "./Legend.svelte";
     import { type LayerId, layerIds, layers } from "./layers";
+    import { Button } from "$lib/components/ui/button";
+    import { Input } from "$lib/components/ui/input";
+    import { addToast } from "$lib/toastStore";
 
     export let data;
+    export let form;
 
     let map: Map;
     let mapContainer: HTMLDivElement;
     type Layer = LayerId | "";
     let activeLayer: Layer = '';
+    let latitude: number;
+    let longitude: number;
+    let address: string;
+    let popupEl: HTMLDivElement;
+    let subMarker: Marker;
+    const popup = new Popup({offset: 30, className: 'text-foreground bg-background p-4 rounded-md', closeButton: false})
+
+    $: {
+        if (form?.success && !form.error) {
+            addToast({message: `Subscribed to ${form.address}`, title: 'Success'})
+            popup.isOpen() && popup.remove() && subMarker.remove()
+        } else if (form?.error) {
+            addToast({message: form.errorMessage ?? 'Something went wrong', title: 'Error', type: 'destructive'})
+        }
+    }
 
     $: {
         if (map && map.loaded()) {
@@ -28,7 +48,7 @@
     }
 
     onMount(() => {
-        const initialState = { lat: 50.5039, lng: 4.4699, zoom: 7.3 };
+        const initialState = { lat: 50.5039, lng: 4.4699, zoom: 7.3 }; // Belgium
 
         map = new Map({
             container: mapContainer,
@@ -38,18 +58,34 @@
             zoom: initialState.zoom,
         });
 
-        const subMarker = new Marker({color: 'red'})
-            .setPopup(new Popup({offset: 25})
-                .setText("Subscribe to this location to get email updates about its air quality!"))
+        subMarker = new Marker({ draggable: true })
+
+        subMarker.on('dragend', (e) => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            const lngLat = e?.target.getLngLat()
+            latitude = lngLat.lat
+            longitude = lngLat.lng
+        })
 
         const geocoder = new MapboxGeocoder({
             accessToken: PUBLIC_MAPBOX_ACCESS_TOKEN,
             countries: 'be',
             placeholder: 'Search for an address...',
             clearAndBlurOnEsc: true,
-            marker: subMarker,
+            marker: false,
+            reverseGeocode: true,
             mapboxgl,
         });
+
+        geocoder.on('result', (e) => {
+            latitude = e.result.center[1]
+            longitude = e.result.center[0]
+            address = e.result.place_name
+            subMarker.setPopup(popup.setDOMContent(popupEl))
+            subMarker.setLngLat(e.result.center).addTo(map)
+            popupEl.classList.remove('hidden')
+        })
 
         map.on('style.load', () => {
             map.setFog({}); // Set the default atmosphere style
@@ -95,6 +131,17 @@
     <title>Map</title>
 </svelte:head>
 
+<div class="hidden bg-background text-primary" bind:this={popupEl} >
+    <h3 class="text-xl">Subscribe</h3>
+    <p class="text-muted-foreground">Subscribe to this location to get email updates about its air quality!</p>
+    <form use:enhance action="?/subscribe" method="POST">
+        <input type="hidden" name="latitude" bind:value={latitude}>
+        <input type="hidden" name="longitude" bind:value={longitude}>
+        <Input name="address" bind:value={address} />
+        <Button class="mt-4 mb-2 w-full" type="submit">Subscribe</Button>
+    </form>
+</div>
+
 <div class="relative h-full">
     <div data-testid="map" class="h-full" bind:this={mapContainer} />
     <LayerSelector class="absolute left-2.5 sm:top-14 top-16" bind:activeLayer />
@@ -124,5 +171,8 @@
     :global(.mapboxgl-ctrl-geocoder .suggestions > .active > a,
     .mapboxgl-ctrl-geocoder .suggestions > li > a:hover) {
         @apply bg-accent text-foreground;
+    }
+    :global(.mapboxgl-popup-content) {
+        @apply p-0 shadow-none;
     }
 </style>

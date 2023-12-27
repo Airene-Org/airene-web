@@ -7,6 +7,7 @@
     import { ModeWatcher } from "mode-watcher";
     import { Sun, Moon } from "radix-icons-svelte";
     import { toggleMode } from "mode-watcher";
+    import Toasts from "$lib/components/Toasts.svelte";
 </script>
 
 <div class="flex flex-col h-screen">
@@ -15,10 +16,10 @@
             <Button href="/">Home</Button>
             <Button href="/map">Map</Button>
             <Button href="/statistics">Statistics</Button>
+            <Button href="/subscriptions">Subscriptions</Button>
         </nav>
         <div class="flex gap-2 items-center">
             {#if $page.data.session}
-                <span>Signed in as</span>
                 <Avatar class="h-9 w-9">
                     <AvatarImage src={$page.data.session.user?.image}
                                  alt="Profile picture of {$page.data.session.user?.name}"></AvatarImage>
@@ -44,5 +45,6 @@
     <main class="flex-1">
         <ModeWatcher />
         <slot />
+        <Toasts />
     </main>
 </div>

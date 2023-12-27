@@ -16,7 +16,7 @@
     }, {});
 </script>
 
-<div class="absolute right-2.5 top-16 bg-foreground text-background p-4 rounded-md flex flex-col gap-2">
+<div class="absolute right-2.5 top-16 bg-foreground text-background px-4 py-2 rounded-md flex flex-col gap-2">
     <Collapsible class="w-[110px]">
        <CollapsibleTrigger class="flex items-center w-full justify-between">
            <span class="italic">Legend</span>

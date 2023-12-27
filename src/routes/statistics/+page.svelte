@@ -7,6 +7,7 @@
     import {page} from "$app/stores";
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
+    import { navigating } from "$app/stores";
 
     import { Calendar as CalendarIcon } from "radix-icons-svelte";
     import { Bird } from "lucide-svelte"
@@ -22,6 +23,7 @@
     import { Input } from "$lib/components/ui/input";
     import { Calendar } from "$lib/components/ui/calendar";
     import * as Popover from "$lib/components/ui/popover";
+    import { Skeleton } from "$lib/components/ui/skeleton";
 
     import { ToggleGroupItem, ToggleGroup,} from "$lib/components/ui/toggle-group";
     import {
@@ -107,7 +109,7 @@
         geocoder.on('result', async (e) => {
             location = e.result?.center?.join(",");
             location && $page.url.searchParams.set("location", location);
-            await goto(`?${$page.url.searchParams.toString()}`);
+            await goto(`?${$page.url.searchParams.toString()}`, {invalidateAll: true});
         });
 
         geocoder.on('clear', async () => {
@@ -196,12 +198,22 @@
     </div>
 </div>
 
-{#if location && data.data}
-    <Line class="m-2" data={data.data} options={{ responsive: true, plugins: {
-        annotation: {
-            annotations: data.anomalies,
-        }
-    } }} />
+{#if $navigating}
+    <div class="flex items-center space-x-2 py-3 aspect-video container">
+        <Skeleton class="h-full w-4" />
+        <div class="space-y-2 flex-grow">
+            <Skeleton class="aspect-video w-full" />
+            <Skeleton class="h-4 w-full" />
+        </div>
+    </div>
+{:else if location && data.hasData}
+    <div class="container">
+        <Line class="m-2" data={data.data} options={{ responsive: true, plugins: {
+            annotation: {
+                annotations: data.anomalies,
+            }
+        } }}/>
+    </div>
 {:else}
     <div class="flex flex-grow flex-col justify-center items-center h-full">
         <h1 class="text-3xl font-bold mb-4">Enter an address to birdwatch some data!</h1>

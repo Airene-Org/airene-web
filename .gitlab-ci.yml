@@ -33,7 +33,7 @@ build:
     - echo "KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID" >> .env
     - echo "KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET" >> .env
     - echo "KEYCLOAK_ISSUER=$KEYCLOAK_ISSUER" >> .env
-    - echo "BACKEND_URL=$BACKEND_URL" >> .env
+    - echo "PUBLIC_BACKEND_URL=$BACKEND_URL" >> .env
   script:
     - echo "Publishing the app"
     - docker build -t $IMAGE_USERNAME.azurecr.io/airene-frontend:$CI_COMMIT_SHORT_SHA .
@@ -49,6 +49,7 @@ test:
   before_script:
     - npm install --legacy-peer-deps
     - npx playwright install --with-deps
+    - export PUBLIC_BACKEND_URL=$BACKEND_URL
   script:
     - echo "Testing the app"
     - npm run test
@@ -106,6 +107,6 @@ deploy:
       KEYCLOAK_CLIENT_ID=secretref:keycloak-client-id
       KEYCLOAK_CLIENT_SECRET=secretref:keycloak-client-sec
       KEYCLOAK_ISSUER=secretref:keycloak-issuer
-      BACKEND_URL=secretref:backend-url
+      PUBLIC_BACKEND_URL=secretref:backend-url
   only:
     - main
