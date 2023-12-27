@@ -1,4 +1,9 @@
-import { KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER, BACKEND_URL } from '$env/static/private';
+import {
+	KEYCLOAK_CLIENT_ID,
+	KEYCLOAK_CLIENT_SECRET,
+	KEYCLOAK_ISSUER,
+} from '$env/static/private';
+import { PUBLIC_BACKEND_URL } from '$env/static/public';
 
 import { error, type Handle, type HandleFetch } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
@@ -6,6 +11,7 @@ import { redirect } from '@sveltejs/kit';
 import { SvelteKitAuth } from '@auth/sveltekit';
 import Keycloak from '@auth/core/providers/keycloak';
 import type { JWT } from '@auth/core/jwt';
+import type { User } from '@auth/core/types';
 
 const handleAuth = SvelteKitAuth({
 	providers: [
@@ -16,33 +22,42 @@ const handleAuth = SvelteKitAuth({
 		})
 	],
 	callbacks: {
-		jwt: async ({ token, account }) => {
+		jwt: async ({ token, account, user }) => {
 			if (account) {
 				token.access_token = account.access_token;
 				token.access_token_expires = Date.now() + (account.expires_in ?? 0) * 1000;
 				token.refresh_token = account.refresh_token;
+				token.refresh_token_expires =
+					Date.now() + ((account.refresh_expires_in as number) ?? 0) * 1000;
 			}
-			if (Date.now() < (token.access_token_expires as number) ?? 0) {
+			if (user) {
+				token.user = user;
+			}
+			if (Date.now() < (token.access_token_expires as number) || 0) {
 				return token;
 			}
 			return refreshAccessToken(token);
 		},
-		signIn: async ({ user}) => {
-			const url = `${BACKEND_URL}/api/users`;
+		signIn: async ({ user, account }) => {
+			const url = `${PUBLIC_BACKEND_URL}/api/users`;
 			const req = await fetch(url, {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${account?.access_token}`
 				},
 				body: JSON.stringify(user)
 			});
 			return req.ok;
 		},
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-expect-error - token is missing from type but still works
 		session: async ({ session, token }) => {
 			if (session) {
 				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 				// @ts-expect-error
 				session.access_token = token.access_token;
+				session.user = token.user as User;
 			}
 			return session;
 		}
@@ -51,8 +66,8 @@ const handleAuth = SvelteKitAuth({
 });
 
 async function refreshAccessToken(token: JWT) {
-	if (Date.now() > (token.refreshTokenExpired as number) ?? 0)
-		throw error(500, 'Refresh token expired');
+	if (Date.now() > (token.refresh_token_expires as number) || 0)
+		redirect(302, '/auth/signin');
 
 	const url = new URL(`${KEYCLOAK_ISSUER}/protocol/openid-connect/token`);
 	const details = {
@@ -62,9 +77,9 @@ async function refreshAccessToken(token: JWT) {
 		refresh_token: token.refresh_token as string
 	};
 	const body = Object.entries(details)
-		.map(([key, value]: [string, (typeof details)[keyof typeof details]]) => {
+		.map(([key, value]: [string, any]) => {
 			const encodedKey = encodeURIComponent(key);
-			const encodedValue = encodeURIComponent(value.toString());
+			const encodedValue = encodeURIComponent(value);
 			return `${encodedKey}=${encodedValue}`;
 		})
 		.join('&');
@@ -78,7 +93,7 @@ async function refreshAccessToken(token: JWT) {
 	});
 
 	if (!response.ok) {
-		throw error(response.status, response.statusText);
+		error(500, response.statusText);
 	}
 
 	const refreshedTokens = await response.json();
@@ -94,15 +109,12 @@ async function refreshAccessToken(token: JWT) {
 const isAuthenticatedUser: Handle = async ({ event, resolve }) => {
 	const session = await event.locals.getSession();
 	if (!session?.user && event.url.pathname !== '/') {
-		throw redirect(302, '/auth/signin');
+		redirect(302, '/auth/signin');
 	}
 	return resolve(event);
 };
 
 export const handleFetch: HandleFetch = async ({ request, event }) => {
-	if(request.url.includes('api/users')) {
-		return fetch(request);
-	}
 	const session = await event.locals.getSession();
 	const token = session?.access_token;
 	if (!token) {

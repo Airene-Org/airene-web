@@ -1,4 +1,4 @@
-import { BACKEND_URL } from '$env/static/private';
+import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import type { PageServerLoad } from './$types';
 import type { ChartDataset, Point } from 'chart.js';
 import { fromDate, getLocalTimeZone } from '@internationalized/date';
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 
 	const dateParam = url.searchParams.get('date');
 	if (!dateParam) {
-		throw redirect(302, `/statistics?date=${fromDate(new Date(), getLocalTimeZone())}`);
+		redirect(302, `/statistics?date=${fromDate(new Date(), getLocalTimeZone())}`);
 	}
 	const date = new Date(Date.parse(dateParam));
 
@@ -23,14 +23,14 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 
 	const distance = Number(url.searchParams.get('distance'));
 
-	const dataUrl = new URL(`${BACKEND_URL}/api/data`);
+	const dataUrl = new URL(`${PUBLIC_BACKEND_URL}/api/data`);
 
 	dataUrl.searchParams.set('longitude', lng.toString());
 	dataUrl.searchParams.set('latitude', lat.toString());
 	dataUrl.searchParams.set('date', date.toISOString().slice(0, 10));
 	dataUrl.searchParams.set('radius', distance.toString());
 
-	const anomalyUrl = new URL(`${BACKEND_URL}/api/anomalies`);
+	const anomalyUrl = new URL(`${PUBLIC_BACKEND_URL}/api/anomalies`);
 
 	anomalyUrl.searchParams.set('longitude', lng.toString());
 	anomalyUrl.searchParams.set('latitude', lat.toString());
@@ -40,10 +40,10 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 	const [dataRes, anomalyRes] = await Promise.all([fetch(dataUrl), fetch(anomalyUrl)]);
 
 	if (!dataRes.ok) {
-		throw error(dataRes.status, dataRes.statusText);
+		error(500, dataRes.statusText);
 	}
 	if (!anomalyRes.ok) {
-		throw error(anomalyRes.status, anomalyRes.statusText);
+		error(500, anomalyRes.statusText);
 	}
 
 	// TODO: update type of fetchedAnomalies
@@ -94,15 +94,21 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 	};
 
 	const dataSets: ChartDataset<'line', (number | Point | undefined)[]>[] = [];
+	let hasData = false;
 
 	labels.forEach(({ label, name }, i) => {
 		if (mode === 'total' && label.includes('AQI')) {
 			return;
 		}
 		const hidden = mode === 'avg' && !(label.includes('AQI') || ['Car', 'Truck'].includes(label));
+
+		const data = transformedData[mode].map((item) => (item ? item[name] : undefined));
+		if (!hasData && data.some((item) => item !== undefined)) {
+			hasData = true;
+		}
 		dataSets.push({
 			label: label,
-			data: transformedData[mode].map((item) => (item ? item[name] : undefined)),
+			data,
 			tension: 0.3,
 			hidden,
 			spanGaps: true,
@@ -125,5 +131,5 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 		datasets: dataSets
 	};
 
-	return { data, anomalies: fetchedAnomalies };
+	return { data, anomalies: fetchedAnomalies, hasData };
 };
