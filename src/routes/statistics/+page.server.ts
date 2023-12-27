@@ -3,7 +3,8 @@ import type { PageServerLoad } from './$types';
 import type { ChartDataset, Point } from 'chart.js';
 import { fromDate, getLocalTimeZone } from '@internationalized/date';
 import { error, redirect } from '@sveltejs/kit';
-import { type Data, labels } from './dataLabels';
+import { type Data, type Anomaly, labels } from './dataLabels';
+import type { LineAnnotationOptions } from "chartjs-plugin-annotation";
 
 export const load: PageServerLoad = async ({ url, fetch }) => {
 	const location = url.searchParams.get('location');
@@ -46,40 +47,59 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 		error(500, anomalyRes.statusText);
 	}
 
-	// TODO: update type of fetchedAnomalies
-	const [fetchedData, fetchedAnomalies]: [fetchedData: Data, fetchedAnomalies: unknown] =
+	const [fetchedData, fetchedAnomalies]: [fetchedData: Data, fetchedAnomalies: Anomaly[]] =
 		await Promise.all([dataRes.json(), anomalyRes.json()]);
 
-	console.log(fetchedAnomalies);
-	// TODO: do necessary transformations on fetchedAnomalies (shape below)
-	// {
-	// 	`anomaly${index}`: { // => map over anomalies and draw a line for each here
-	// 		type: 'line',
-	// 			borderColor: 'red',
-	// 			borderWidth: 2,
-	// 			click: (e) => {
-	// 				const index = e.element.options.value;
-	// 				// create a mapping of the dataset labels to the data values
-	// 				const data = e.chart.data.datasets.map(d => ( {[d.label]: d.data[index]} ))
-	// 				console.log(data);
-	// 			},
-	// 			scaleID: 'x',
-	// 			value: 9, // data value to draw the line at (INDEX, NOT ACTUAL VALUE!)
-	// 			label: {
-	// 			content: 'Anomaly',
-	// 				display: true,
-	// 				position: 'start',
-	// 				backgroundColor: 'red',
-	// 				xAdjust: 25,
-	// 				yAdjust: 25,
-	// 				font: {
-	// 				size: 14,
-	// 					weight: 'bold',
-	// 					color: 'red',
-	// 			},
-	// 		},
-	// 	},
-	// }
+	const anomalyData = fetchedAnomalies.reduce<Record<string, Anomaly>>((acc, anomaly) => ({ ...acc, [anomaly.id]: anomaly }), {});
+
+	const anomalyLines = new Set<number>();
+	const anomalyAnnotations: LineAnnotationOptions[] =	fetchedAnomalies.map((anomaly, index) => {
+		const date = new Date(anomaly.timestamp);
+		const hour = date.getHours();
+		if (anomalyLines.has(hour)) {
+			return {
+				type: 'line',
+				borderWidth: 0,
+				id: anomaly.id,
+				scaleID: 'x',
+				value: hour - 1, // data value to draw the line at (INDEX, NOT ACTUAL VALUE!)
+				label: {
+					content: 'Anomaly',
+					display: true,
+					position: 'start',
+					backgroundColor: 'red',
+					yAdjust: 35 * index,
+					font: {
+						size: 14,
+						weight: 'bold',
+						color: 'red',
+					},
+				},
+			}
+		}
+		anomalyLines.add(hour);
+
+		return {
+			type: 'line',
+			borderColor: 'red',
+			borderWidth: 2,
+			id: anomaly.id,
+			scaleID: 'x',
+			value: hour - 1, // data value to draw the line at (INDEX, NOT ACTUAL VALUE!)
+			label: {
+				content: 'Anomaly',
+				display: true,
+				position: 'start',
+				backgroundColor: 'red',
+				yAdjust: 35 * index,
+				font: {
+				 	size: 14,
+				 	weight: 'bold',
+				 	color: 'red',
+				},
+			},
+		}
+	});
 
 	const hourLabels = Array.from({ length: 24 }, (_, i) => i + 1);
 	const transformedData = {
@@ -131,5 +151,5 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 		datasets: dataSets
 	};
 
-	return { data, anomalies: fetchedAnomalies, hasData };
+	return { data, anomalyAnnotations, anomalyData, hasData };
 };
