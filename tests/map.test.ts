@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 
+// TODO: remove skip once we get actual data from the backend in prod
 test.skip('map loads', async ({ page, baseURL }) => {
 	await page.goto(`${baseURL}/auth/signin`);
 	await page.getByRole('button', { name: 'Sign in with Keycloak' }).click();

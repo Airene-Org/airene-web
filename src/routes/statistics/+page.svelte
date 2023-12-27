@@ -4,42 +4,39 @@
     import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 
     import { queryParam, ssp } from "sveltekit-search-params";
-    import {page} from "$app/stores";
+    import { navigating, page } from "$app/stores";
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
-    import { navigating } from "$app/stores";
 
     import { Calendar as CalendarIcon } from "radix-icons-svelte";
     import { Bird } from "lucide-svelte"
 
-    import {
-        type DateValue,
-        getLocalTimeZone,
-        DateFormatter,
-        fromDate,
-    } from "@internationalized/date";
+    import { DateFormatter, type DateValue, fromDate, getLocalTimeZone, } from "@internationalized/date";
     import { cn } from "$lib/utils";
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input";
     import { Calendar } from "$lib/components/ui/calendar";
-    import * as Popover from "$lib/components/ui/popover";
+    import {PopoverContent, Popover, PopoverTrigger} from "$lib/components/ui/popover";
     import { Skeleton } from "$lib/components/ui/skeleton";
 
-    import { ToggleGroupItem, ToggleGroup,} from "$lib/components/ui/toggle-group";
+    import { ToggleGroup, ToggleGroupItem, } from "$lib/components/ui/toggle-group";
     import {
+        CategoryScale,
         Chart as ChartJS,
+        Legend,
+        LinearScale,
+        LineElement,
+        PointElement,
         Title,
         Tooltip,
-        Legend,
-        LineElement,
-        LinearScale,
-        PointElement,
-        CategoryScale, type ScriptableChartContext,
     } from 'chart.js';
+    import annotationPlugin, { type EventContext } from "chartjs-plugin-annotation";
     import { Line } from 'svelte-chartjs';
-
-    import annotationPlugin from 'chartjs-plugin-annotation';
     import { Label } from "$lib/components/ui/label";
+    import type { AnnotationOptions, LabelAnnotationOptions, AnnotationElement } from "chartjs-plugin-annotation/types/options";
+    import AnomalyCard from "./AnomalyCard.svelte";
+    import type { Anomaly } from "./dataLabels";
+
     ChartJS.register(
         Title,
         Tooltip,
@@ -86,6 +83,7 @@
             accessToken: PUBLIC_MAPBOX_ACCESS_TOKEN,
             countries: 'be',
             placeholder: 'Search for an address...',
+            reverseGeocode: true,
         })
 
         geocoder.addTo(autoCompleteElement);
@@ -118,18 +116,6 @@
             await goto(`?${$page.url.searchParams.toString()}`);
         });
     })
-    function details(ctx: ScriptableChartContext<"line">) {
-        const idx = ctx.element.options?.value;
-        const values = ctx.chart.data.datasets.reduce(((acc, d) => {
-            acc[d.label] = d.data[idx];
-            return acc;
-        }), {})
-        if (values["PM2.5"]) {
-            const valuesStr = Object.entries(values).map(([key, value]) => `${key}: ${value}`).join(', ');
-            return `Anomaly: ${valuesStr}`;
-        }
-        return "Anomaly"
-    }
 
     let isMouseLeft = false;
     let angle = "0";
@@ -142,6 +128,25 @@
     export let data;
 
     let addressInput: HTMLInputElement | null;
+    let displayedAnomaly: Anomaly | undefined = undefined;
+
+    $: updatedAnomalies = data.anomalyAnnotations?.map((anomaly) => {
+        return {
+            ...anomaly,
+            click: (e: EventContext) => {
+                const id: string = ( e.element.options as AnnotationOptions<'line'> ).id;
+                displayedAnomaly = data.anomalyData && data.anomalyData[id];
+            },
+            enter: (context: EventContext) => {
+                ( ( context.element.label as AnnotationElement ).options as LabelAnnotationOptions).backgroundColor = 'blue';
+                context.chart.canvas.style.cursor = 'pointer';
+            },
+            leave: (context: EventContext) => {
+                ( ( context.element.label as AnnotationElement ).options as LabelAnnotationOptions).backgroundColor = 'red';
+                context.chart.canvas.style.cursor = 'default';
+            },
+        }
+    });
 
     onMount(() => {
         // adding id to location input for accessibility
@@ -172,19 +177,19 @@
 
     <div class="flex flex-col justify-end">
         <Label for="date" class="block">Date</Label>
-        <Popover.Root>
-            <Popover.Trigger id="date" asChild let:builder>
+        <Popover>
+            <PopoverTrigger id="date" asChild let:builder>
                 <Button variant="outline"
                         class={cn( "w-[240px] justify-start text-left font-normal mt-1", !$date && "text-muted-foreground" )}
                         builders={[builder]}>
                     <CalendarIcon class="mr-2 h-4 w-4"/>
                     {$date ? df.format($date.toDate(getLocalTimeZone())) : "Pick a date"}
                 </Button>
-            </Popover.Trigger>
-            <Popover.Content class="w-auto" align="start">
+            </PopoverTrigger>
+            <PopoverContent class="w-auto" align="start">
                 <Calendar bind:value={$date}/>
-            </Popover.Content>
-        </Popover.Root>
+            </PopoverContent>
+        </Popover>
     </div>
 
     <div>
@@ -198,7 +203,7 @@
     </div>
 </div>
 
-{#if $navigating}
+{#if $navigating?.to?.route.id === '/statistics'}
     <div class="flex items-center space-x-2 py-3 aspect-video container">
         <Skeleton class="h-full w-4" />
         <div class="space-y-2 flex-grow">
@@ -210,7 +215,7 @@
     <div class="container">
         <Line class="m-2" data={data.data} options={{ responsive: true, plugins: {
             annotation: {
-                annotations: data.anomalies,
+                annotations: updatedAnomalies,
             }
         } }}/>
     </div>
@@ -221,6 +226,10 @@
             <Bird size={500} />
         </span>
     </div>
+{/if}
+
+{#if displayedAnomaly}
+    <AnomalyCard bind:anomaly={displayedAnomaly} />
 {/if}
 
 <style>
