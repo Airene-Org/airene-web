@@ -115,6 +115,15 @@
             });
             layers.map(layer => map.addLayer(layer, 'road-label'));
         });
+
+        map.on('contextmenu', (e) => {
+            latitude = e.lngLat.lat
+            longitude = e.lngLat.lng
+            geocoder.query(`${latitude}, ${longitude}`)
+            subMarker.setPopup(popup.setDOMContent(popupEl))
+            subMarker.setLngLat([longitude, latitude]).addTo(map)
+            popupEl.classList.remove('hidden')
+        })
     });
 
     onDestroy(() => {
@@ -137,8 +146,8 @@
     <form use:enhance action="?/subscribe" method="POST">
         <input type="hidden" name="latitude" bind:value={latitude}>
         <input type="hidden" name="longitude" bind:value={longitude}>
-        <Input name="address" bind:value={address} />
-        <Button class="mt-4 mb-2 w-full" type="submit">Subscribe</Button>
+        <Input class="my-2" placeholder="Home, Work..." name="address" bind:value={address} />
+        <Button class="mt-2 mb-2 w-full" type="submit">Subscribe</Button>
     </form>
 </div>
 
