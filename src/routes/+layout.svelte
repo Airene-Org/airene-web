@@ -8,6 +8,7 @@
     import { Sun, Moon } from "radix-icons-svelte";
     import { toggleMode } from "mode-watcher";
     import Toasts from "$lib/components/Toasts.svelte";
+    import {Bell} from "lucide-svelte";
 </script>
 
 <div class="flex flex-col h-screen">
@@ -17,6 +18,7 @@
             <Button href="/map">Map</Button>
             <Button href="/statistics">Statistics</Button>
             <Button href="/subscriptions">Subscriptions</Button>
+            <Button href="/notifications"><Bell /></Button>
         </nav>
         <div class="flex gap-2 items-center">
             {#if $page.data.session}
