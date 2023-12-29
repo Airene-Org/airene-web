@@ -12,6 +12,7 @@
     import Legend from "./Legend.svelte";
     import { type LayerId, layerIds, layers } from "./layers";
     import { Button } from "$lib/components/ui/button";
+    import { Loader } from "lucide-svelte";
     import { Input } from "$lib/components/ui/input";
     import { addToast } from "$lib/toastStore";
 
@@ -26,6 +27,7 @@
     let longitude: number;
     let address: string;
     let popupEl: HTMLDivElement;
+    let isLoading = false;
     let subMarker: Marker;
     const popup = new Popup({offset: 30, className: 'text-foreground bg-background p-4 rounded-md', closeButton: false})
 
@@ -33,6 +35,7 @@
         if (form?.success && !form.error) {
             addToast({message: `Subscribed to ${form.address}`, title: 'Success'})
             popup.isOpen() && popup.remove() && subMarker.remove()
+            isLoading = false
         } else if (form?.error) {
             addToast({message: form.errorMessage ?? 'Something went wrong', title: 'Error', type: 'destructive'})
         }
@@ -143,11 +146,17 @@
 <div class="hidden bg-background text-primary" bind:this={popupEl} >
     <h3 class="text-xl">Subscribe</h3>
     <p class="text-muted-foreground">Subscribe to this location to get email updates about its air quality!</p>
-    <form use:enhance action="?/subscribe" method="POST">
+    <form use:enhance on:submit={() => isLoading = true} action="?/subscribe" method="POST">
         <input type="hidden" name="latitude" bind:value={latitude}>
         <input type="hidden" name="longitude" bind:value={longitude}>
         <Input class="my-2" placeholder="Home, Work..." name="address" bind:value={address} />
-        <Button class="mt-2 mb-2 w-full" type="submit">Subscribe</Button>
+        <Button  bind:disabled={isLoading} class="mt-2 mb-2 w-full" type="submit">
+            {#if isLoading}
+                <Loader class="animate-spin" />
+            {:else}
+                Subscribe
+            {/if}
+        </Button>
     </form>
 </div>
 

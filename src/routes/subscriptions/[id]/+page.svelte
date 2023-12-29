@@ -30,7 +30,7 @@
             method: "PATCH",
         });
         if (res.ok) {
-            addToast({title: "Success", message: `Subscription ${data.subscription.pause ? "resumed" : "paused"}`, timeout: 2000});
+            addToast({title: "Success", message: `Subscription ${areNotificationsEnabled ? "resumed" : "paused"}`, timeout: 2000});
         } else {
             data.subscription.pause = !data.subscription.pause;
             addToast({title: "Error", type:'destructive', message: res.statusText, timeout: 2000});
