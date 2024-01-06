@@ -1,15 +1,9 @@
 <script lang="ts">
-    import { Bell } from "radix-icons-svelte";
-    import { Button } from "$lib/components/ui/button";
     import * as Card from "$lib/components/ui/card";
     import { Separator } from "$lib/components/ui/separator";
-    import { Label } from "$lib/components/ui/label";
-    import { CalendarClock, LandPlot, Trash, Wind } from "lucide-svelte";
-    import { enhance } from "$app/forms";
-    import { addToast } from "$lib/toastStore";
+    import { CalendarClock, LandPlot, Wind } from "lucide-svelte";
 
     export let data;
-    console.log(data.data)
     $: date = new Date(data.notification.timestamp).toLocaleDateString("en-US", {
         weekday: "long",
         year: "numeric",

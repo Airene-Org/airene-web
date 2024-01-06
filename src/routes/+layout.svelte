@@ -7,8 +7,8 @@
     import { ModeWatcher } from "mode-watcher";
     import { Sun, Moon } from "radix-icons-svelte";
     import { toggleMode } from "mode-watcher";
-    import Toasts from "$lib/components/Toasts.svelte";
-    import {Bell} from "lucide-svelte";
+    import { Bell } from "lucide-svelte";
+    import { Toaster } from "$lib/components/ui/sonner/index";
 </script>
 
 <div class="flex flex-col h-screen">
@@ -47,6 +47,6 @@
     <main class="flex-1">
         <ModeWatcher />
         <slot />
-        <Toasts />
+        <Toaster closeButton richColors />
     </main>
 </div>
