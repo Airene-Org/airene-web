@@ -18,7 +18,7 @@ export let data;
             </Button>
         {:else}
             <p class="text-muted-foreground">No subscriptions</p>
-            <p>Add subscriptions by searching for locations on the map and clicking the pin.</p>
+            <p>Add subscriptions by searching for locations on the <Button variant="link" class="h-fit p-0">map</Button> and clicking the pin.</p>
         {/each}
     </div>
     <slot/>

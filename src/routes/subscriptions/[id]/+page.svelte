@@ -7,7 +7,7 @@
     import { Label } from "$lib/components/ui/label";
     import { CalendarClock, Copy, LandPlot, Trash } from "lucide-svelte";
     import { enhance } from "$app/forms";
-    import { addToast } from "$lib/toastStore";
+    import { toast } from "svelte-sonner";
 
     export let data;
     $: date = new Date(data.subscription.createdAt).toLocaleDateString("en-US", {
@@ -18,11 +18,11 @@
         hour: "numeric",
         minute: "2-digit",
     });
-    $: areNotificationsEnabled = !data.subscription.pause;
+    let areNotificationsEnabled = !data.subscription.pause;
 
     function copy() {
         navigator.clipboard.writeText(`${data.subscription.latitude}, ${data.subscription.longitude}`);
-        addToast({title: "Success", message: "Copied to clipboard", timeout: 1500});
+        toast.info("Latitude and longitude copied to clipboard");
     }
 
     async function togglePause() {
@@ -30,10 +30,19 @@
             method: "PATCH",
         });
         if (res.ok) {
-            addToast({title: "Success", message: `Subscription ${areNotificationsEnabled ? "resumed" : "paused"}`, timeout: 2000});
+            const data = await res.json();
+            toast.success(`Subscription ${data.subscription.pause ? "paused" : "resumed"}`, {
+                action: {
+                    label: "Undo",
+                    onClick: () => {
+                        areNotificationsEnabled = !areNotificationsEnabled;
+                        togglePause();
+                    }
+                }
+            });
         } else {
             data.subscription.pause = !data.subscription.pause;
-            addToast({title: "Error", type:'destructive', message: res.statusText, timeout: 2000});
+            toast.error(res.statusText);
         }
     }
 </script>
@@ -71,8 +80,8 @@
                     <p>Location:</p>
                     <p>
                         {data.subscription.latitude} {data.subscription.latitude > 0 ? "N" : "S"}
-                    <p/>
-                    <Separator class="h-" orientation="vertical" />
+                    </p>
+                    <Separator orientation="vertical" />
                     <p>
                         {data.subscription.longitude} {data.subscription.longitude > 0 ? "E" : "W"}
                     </p>

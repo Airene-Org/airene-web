@@ -14,7 +14,7 @@
     import { Button } from "$lib/components/ui/button";
     import { Loader } from "lucide-svelte";
     import { Input } from "$lib/components/ui/input";
-    import { addToast } from "$lib/toastStore";
+    import { toast } from "svelte-sonner";
 
     export let data;
     export let form;
@@ -33,11 +33,11 @@
 
     $: {
         if (form?.success && !form.error) {
-            addToast({message: `Subscribed to ${form.address}`, title: 'Success'})
+            toast.success(`Subscribed to ${form.address}`)
             popup.isOpen() && popup.remove() && subMarker.remove()
             isLoading = false
         } else if (form?.error) {
-            addToast({message: form.errorMessage ?? 'Something went wrong', title: 'Error', type: 'destructive'})
+            toast.error(form.errorMessage ?? 'Something went wrong')
         }
     }
 

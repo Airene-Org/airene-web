@@ -7,7 +7,8 @@
     import { ModeWatcher } from "mode-watcher";
     import { Sun, Moon } from "radix-icons-svelte";
     import { toggleMode } from "mode-watcher";
-    import Toasts from "$lib/components/Toasts.svelte";
+    import { Bell } from "lucide-svelte";
+    import { Toaster } from "$lib/components/ui/sonner/index";
 </script>
 
 <div class="flex flex-col h-screen">
@@ -17,6 +18,7 @@
             <Button href="/map">Map</Button>
             <Button href="/statistics">Statistics</Button>
             <Button href="/subscriptions">Subscriptions</Button>
+            <Button href="/notifications"><Bell /></Button>
         </nav>
         <div class="flex gap-2 items-center">
             {#if $page.data.session}
@@ -45,6 +47,6 @@
     <main class="flex-1">
         <ModeWatcher />
         <slot />
-        <Toasts />
+        <Toaster closeButton richColors />
     </main>
 </div>
