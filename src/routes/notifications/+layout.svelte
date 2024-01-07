@@ -11,10 +11,9 @@ export let data;
 
 <h1 class="text-2xl m-2">Notifications</h1>
 <div class="flex">
-    <div class="p-2 flex flex-col gap-2 overflow-y-auto overflow-x-clip h-[800px] mr-4">
+    <div class="p-2 flex flex-col gap-2 overflow-y-auto h-[800px] mr-4 min-w-64">
         {#each data.notifications as notifications}
             {@const date = new Date(notifications.timestamp).toLocaleDateString('en-US', {
-                weekday: "long",
                 year: "numeric",
                 month: "long",
                 day: "numeric",

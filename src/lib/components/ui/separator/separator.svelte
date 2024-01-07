@@ -13,7 +13,7 @@
 <SeparatorPrimitive.Root
 	class={cn(
 		"shrink-0 bg-border",
-		orientation === "horizontal" ? "h-[1px] w-full" : "h-full w-[1px]",
+		orientation === "horizontal" ? "h-[2px] w-full" : "w-[2px]",
 		className
 	)}
 	{orientation}

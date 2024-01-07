@@ -80,8 +80,8 @@
                     <p>Location:</p>
                     <p>
                         {data.subscription.latitude} {data.subscription.latitude > 0 ? "N" : "S"}
-                    <p/>
-                    <Separator class="h-" orientation="vertical" />
+                    </p>
+                    <Separator orientation="vertical" />
                     <p>
                         {data.subscription.longitude} {data.subscription.longitude > 0 ? "E" : "W"}
                     </p>
