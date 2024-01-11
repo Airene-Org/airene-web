@@ -34,7 +34,7 @@
     import { Line } from 'svelte-chartjs';
     import { Label } from "$lib/components/ui/label";
     import type { AnnotationOptions, LabelAnnotationOptions, AnnotationElement } from "chartjs-plugin-annotation/types/options";
-    import AnomalyCard from "./AnomalyCard.svelte";
+    import AnomalyCard from "$lib/components/AnomalyCard.svelte";
     import type { Anomaly } from "./dataLabels";
 
     ChartJS.register(
@@ -229,7 +229,9 @@
 {/if}
 
 {#if displayedAnomaly}
-    <AnomalyCard bind:anomaly={displayedAnomaly} />
+    <div class="max-w-2xl m-auto">
+        <AnomalyCard bind:data={displayedAnomaly} />
+    </div>
 {/if}
 
 <style>

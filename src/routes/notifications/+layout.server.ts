@@ -2,12 +2,28 @@ import type { LayoutServerLoad } from './$types';
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import { redirect } from '@sveltejs/kit';
 
+type Feedback = {
+	feedbackReason: string;
+	description: string;
+};
+
+type Anomaly = {
+	timestamp: string;
+	location: {
+		latitude: number;
+		longitude: number;
+	};
+	dataId: string;
+	averageRegression: number;
+	feedback: Feedback[];
+};
+
 type Notification = {
 	id: string;
-	anomalyId: string;
 	dataId: string;
 	hasProvidedFeedback: boolean;
 	timestamp: string;
+	anomaly: Anomaly;
 };
 
 export const load: LayoutServerLoad = async ({ fetch, locals, url }) => {
