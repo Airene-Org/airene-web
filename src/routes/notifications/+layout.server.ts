@@ -7,12 +7,15 @@ type Feedback = {
 	description: string;
 };
 
+type Location = {
+	latitude: number;
+	longitude: number;
+};
+
 type Anomaly = {
+	id: string;
 	timestamp: string;
-	location: {
-		latitude: number;
-		longitude: number;
-	};
+	location: Location;
 	dataId: string;
 	averageRegression: number;
 	feedback: Feedback[];
