@@ -66,7 +66,7 @@
                     </RadioGroup>
                     <div class="flex space-x-2 items-center" >
                         <Label for="description">Description</Label>
-                        <Input name="description" id="description" class="flex-grow" />
+                        <Input name="description" id="description" class="flex-grow" autocomplete="off" />
                     </div>
                     <Input type="hidden" name="anomalyId" value={data.notification.anomaly.id} />
                     <Button class='m-4' type="submit">Submit</Button>
