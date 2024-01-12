@@ -81,13 +81,13 @@ deploy:
     - tag=$CI_COMMIT_REF_NAME
     - az containerapp up
       --name airene-frontend
-      --resource-group int5
+      --resource-group containerapps
       --location westeurope
       --environment prod
       --target-port 3000
       --ingress external
       --image "$IMAGE_USERNAME.azurecr.io/airene-frontend:$CI_COMMIT_SHORT_SHA"
-    - az containerapp secret set --name airene-frontend --resource-group int5 --secrets
+    - az containerapp secret set --name airene-frontend --resource-group containerapps --secrets
       mapbox-access-token=$PUBLIC_MAPBOX_ACCESS_TOKEN
       auth-secret=$AUTH_SECRET
       keycloak-client-id=$KEYCLOAK_CLIENT_ID
@@ -95,7 +95,7 @@ deploy:
       keycloak-issuer=$KEYCLOAK_ISSUER
       backend-url=$BACKEND_URL
     - az containerapp update --name airene-frontend
-      --resource-group int5
+      --resource-group containerapps
       --cpu 1
       --memory 2Gi
       --min-replicas 0
