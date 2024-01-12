@@ -234,7 +234,7 @@
     </div>
 {/if}
 
-<style>
+<style lang="postcss">
     /*overriding some mapbox styles*/
     :global(div.mapboxgl-ctrl-geocoder) {
         @apply bg-background rounded-md border-s ring-1 ring-input;

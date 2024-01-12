@@ -166,7 +166,7 @@
     <Legend bind:activeLayer />
 </div>
 
-<style>
+<style lang="postcss">
     /*overriding some mapbox styles*/
     :global(div.mapboxgl-ctrl-geocoder) {
         @apply bg-background rounded-md border-secondary ring-1 ring-secondary;
