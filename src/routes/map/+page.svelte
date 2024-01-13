@@ -2,7 +2,16 @@
     import { PUBLIC_MAPBOX_ACCESS_TOKEN } from "$env/static/public"
     import { mode } from 'mode-watcher'
     import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
-    import mapboxgl, { GeolocateControl, Map, Marker, Popup } from "mapbox-gl";
+    import mapboxgl, {
+        type EventData,
+        GeolocateControl,
+        Map,
+        type MapboxGeoJSONFeature,
+        MapMouseEvent,
+        Marker,
+        Popup,
+        type LngLatLike
+    } from "mapbox-gl";
     import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
     import "mapbox-gl/dist/mapbox-gl.css"
 
@@ -30,6 +39,7 @@
     let isLoading = false;
     let subMarker: Marker;
     const popup = new Popup({offset: 30, className: 'text-foreground bg-background p-4 rounded-md', closeButton: false})
+    const hoverPopup = new Popup({offset: 30, className: 'text-foreground bg-background p-4 rounded-md', closeButton: false, closeOnClick: false})
 
     $: {
         if (form?.success && !form.error) {
@@ -96,6 +106,11 @@
                 type: 'geojson',
                 data: data.geoJson
             });
+            map.addSource('anomalies', {
+                type: 'geojson',
+                data: data.anomalies
+            })
+
             layers.map(layer => {
                 if (!layer.layout) return;
                 if (layer.id === activeLayer || (activeLayer === '' && layer.id === 'air-quality-points')) {
@@ -105,13 +120,53 @@
                 }
                 map.addLayer(layer, 'road-label')
             });
-        });
+
+            map.loadImage('/src/lib/Alert Triangle.png', (error, image) => {
+                if (error) throw error;
+                if (!image) return;
+
+                map.addImage('anomaly-marker', image);
+            });
+
+            map.addLayer({
+                id: 'anomaly-icons',
+                type: 'symbol',
+                source: 'anomalies',
+                layout: {
+                    'icon-anchor': 'bottom',
+                    "icon-keep-upright": true,
+                    "icon-offset": [0, -70],
+                    'icon-image': 'anomaly-marker',
+                    'icon-size': 0.1,
+                    'icon-allow-overlap': true,
+                },
+            });
+            });
 
         map.addControl(new GeolocateControl({ showUserLocation: true }))
         map.addControl(geocoder, "top-left");
 
 
         map.on('load', () => {
+            map.addSource('anomalies', {
+                type: 'geojson',
+                data: data.anomalies
+            });
+
+            map.addLayer({
+                id: 'anomaly-icons',
+                type: 'symbol',
+                source: 'anomalies',
+                layout: {
+                    'icon-anchor': 'bottom',
+                    "icon-keep-upright": true,
+                    "icon-offset": [0, -70],
+                    'icon-image': 'anomaly-marker',
+                    'icon-size': 0.1,
+                    'icon-allow-overlap': true,
+                },
+            });
+
             map.addSource('air-quality', {
                 type: 'geojson',
                 data: data.geoJson
@@ -123,10 +178,29 @@
             latitude = e.lngLat.lat
             longitude = e.lngLat.lng
             geocoder.query(`${latitude}, ${longitude}`)
-            subMarker.setPopup(popup.setDOMContent(popupEl))
+            subMarker.setPopup(hoverPopup)
             subMarker.setLngLat([longitude, latitude]).addTo(map)
-            popupEl.classList.remove('hidden')
         })
+
+        map.on('mouseenter', 'anomaly-icons', (e: MapMouseEvent & {features?: MapboxGeoJSONFeature[]} & EventData) => {
+            map.getCanvas().style.cursor = 'pointer';
+            if (!e.features) return;
+            const coordinates = ( e.features[0].geometry as {type: 'Point', coordinates: LngLatLike}).coordinates;
+            const { aqi, car, heavy } = e.features[0].properties!;
+
+            hoverPopup.setLngLat(coordinates).setHTML(`
+                 <div class="bg-background text-primary">
+                     <p class="text-xl">Anomaly</p>
+                     <p class="text-muted-foreground">Cars: ${car.toFixed(0)}</p>
+                     <p class="text-muted-foreground">Trucks: ${heavy.toFixed(0)}</p>
+                     <p class="text-muted-foreground">AQI: ${aqi.toFixed(2)}</p>
+                 </div>`).addTo(map);
+        });
+
+        map.on('mouseleave', 'anomaly-icons', () => {
+            map.getCanvas().style.cursor = '';
+            hoverPopup.remove();
+        });
     });
 
     onDestroy(() => {
@@ -166,7 +240,7 @@
     <Legend bind:activeLayer />
 </div>
 
-<style>
+<style lang="postcss">
     /*overriding some mapbox styles*/
     :global(div.mapboxgl-ctrl-geocoder) {
         @apply bg-background rounded-md border-secondary ring-1 ring-secondary;
@@ -191,6 +265,15 @@
         @apply bg-accent text-foreground;
     }
     :global(.mapboxgl-popup-content) {
-        @apply p-0 shadow-none;
+        @apply p-0 shadow-none bg-background;
+    }
+    :global(.anomaly-marker) {
+        background-image: url("/src/lib/Alert Triangle.png");
+        background-size: cover;
+        height: 2rem;
+        width: 2rem;
+    }
+    :global(.mapboxgl-popup-tip) {
+        border-top-color: var(--foreground) !important;
     }
 </style>

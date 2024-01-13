@@ -1,9 +1,7 @@
-import {
-	KEYCLOAK_CLIENT_ID,
-	KEYCLOAK_CLIENT_SECRET,
-	KEYCLOAK_ISSUER,
-} from '$env/static/private';
+import * as Sentry from '@sentry/sveltekit';
+import { KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER } from '$env/static/private';
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
+import { dev } from '$app/environment';
 
 import { error, type Handle, type HandleFetch } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
@@ -12,6 +10,12 @@ import { SvelteKitAuth } from '@auth/sveltekit';
 import Keycloak from '@auth/core/providers/keycloak';
 import type { JWT } from '@auth/core/jwt';
 import type { User } from '@auth/core/types';
+
+dev ||
+	Sentry.init({
+		dsn: 'https://a5eca570a1dd3f70e6dbb6a6efadea88@o4506478524301312.ingest.sentry.io/4506557777510400',
+		tracesSampleRate: 1
+	});
 
 const handleAuth = SvelteKitAuth({
 	providers: [
@@ -66,8 +70,7 @@ const handleAuth = SvelteKitAuth({
 });
 
 async function refreshAccessToken(token: JWT) {
-	if (Date.now() > (token.refresh_token_expires as number) || 0)
-		redirect(302, '/auth/signin');
+	if (Date.now() > (token.refresh_token_expires as number) || 0) redirect(302, '/auth/signin');
 
 	const url = new URL(`${KEYCLOAK_ISSUER}/protocol/openid-connect/token`);
 	const details = {
@@ -124,4 +127,5 @@ export const handleFetch: HandleFetch = async ({ request, event }) => {
 	return fetch(request);
 };
 
-export const handle = sequence(handleAuth, isAuthenticatedUser);
+export const handle = sequence(Sentry.sentryHandle(), handleAuth, isAuthenticatedUser);
+export const handleError = Sentry.handleErrorWithSentry();

@@ -8,6 +8,7 @@
     import { CalendarClock, Copy, LandPlot, Trash } from "lucide-svelte";
     import { enhance } from "$app/forms";
     import { toast } from "svelte-sonner";
+    import { invalidate } from "$app/navigation";
 
     export let data;
     $: date = new Date(data.subscription.createdAt).toLocaleDateString("en-US", {
@@ -18,7 +19,8 @@
         hour: "numeric",
         minute: "2-digit",
     });
-    let areNotificationsEnabled = !data.subscription.pause;
+    $: dataPaused = data.subscription.pause;
+    $: areNotificationsEnabled = !dataPaused;
 
     function copy() {
         navigator.clipboard.writeText(`${data.subscription.latitude}, ${data.subscription.longitude}`);
@@ -30,8 +32,8 @@
             method: "PATCH",
         });
         if (res.ok) {
-            const data = await res.json();
-            toast.success(`Subscription ${data.subscription.pause ? "paused" : "resumed"}`, {
+            const resData = await res.json();
+            toast.success(`Subscription ${resData.subscription.pause ? "paused" : "resumed"}`, {
                 action: {
                     label: "Undo",
                     onClick: () => {
@@ -41,8 +43,8 @@
                 }
             });
         } else {
-            data.subscription.pause = !data.subscription.pause;
-            toast.error(res.statusText);
+            areNotificationsEnabled = !areNotificationsEnabled;
+            toast.error('Oops, something went wrong', {description: res.statusText});
         }
     }
 </script>

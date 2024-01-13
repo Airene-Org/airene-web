@@ -1,9 +1,15 @@
+import { sentrySvelteKit } from "@sentry/sveltekit";
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
 import { ssp } from 'sveltekit-search-params/plugin';
 
 export default defineConfig({
-	plugins: [ssp(), sveltekit()],
+	plugins: [sentrySvelteKit({
+        sourceMapsUploadOptions: {
+            org: "peter-buschenreiter",
+            project: "airene-frontend"
+        }
+    }), ssp(), sveltekit()],
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
 	}

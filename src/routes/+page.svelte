@@ -47,7 +47,7 @@
 // https://v0.dev/t/mLt0oVDvFdt
 -->
 <main>
-    <section class="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-cover bg-center shadow-[inset_0_0_8px_2px_black]" style="background-image:url({landingPage})">
+    <section class="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-cover bg-center shadow-[inset_0_0_8px_2px_background]" style="background-image:url({landingPage})">
         <div class="container px-4 md:px-6">
             <div class="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
                 <div class="flex flex-col justify-center space-y-4 backdrop-blur p-4 rounded-2xl bg-black/60">
@@ -68,7 +68,7 @@
                         <li>Promotes healthier living</li>
                     </ul>
                     <div>
-                        <Button href="/map" class="animate-bounce mt-4">Check out the Map</Button>
+                        <Button href="/map" class="animate-bounce mt-4 bg-white text-black">Check out the Map</Button>
                     </div>
                 </div>
             </div>
