@@ -44,7 +44,7 @@
             });
         } else {
             areNotificationsEnabled = !areNotificationsEnabled;
-            toast.error('Oops, something went wrong', {description: res.statusText});onoffline
+            toast.error('Oops, something went wrong', {description: res.statusText});
         }
     }
 </script>
