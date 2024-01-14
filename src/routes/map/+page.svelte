@@ -48,6 +48,8 @@
             isLoading = false
         } else if (form?.error) {
             toast.error(form.errorMessage ?? 'Something went wrong')
+            popup.isOpen() && popup.remove() && subMarker.remove()
+            isLoading = false
         }
     }
 
