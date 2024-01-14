@@ -8,7 +8,6 @@
     import { CalendarClock, Copy, LandPlot, Trash } from "lucide-svelte";
     import { enhance } from "$app/forms";
     import { toast } from "svelte-sonner";
-    import { invalidate } from "$app/navigation";
 
     export let data;
     $: date = new Date(data.subscription.createdAt).toLocaleDateString("en-US", {
@@ -19,8 +18,6 @@
         hour: "numeric",
         minute: "2-digit",
     });
-    $: dataPaused = data.subscription.pause;
-    $: areNotificationsEnabled = !dataPaused;
 
     function copy() {
         navigator.clipboard.writeText(`${data.subscription.latitude}, ${data.subscription.longitude}`);
@@ -33,17 +30,17 @@
         });
         if (res.ok) {
             const resData = await res.json();
-            toast.success(`Subscription ${resData.subscription.pause ? "paused" : "resumed"}`, {
+            toast.success(`Subscription ${resData.subscription.enabled ? "resumed" : "paused"}`, {
                 action: {
                     label: "Undo",
                     onClick: () => {
-                        areNotificationsEnabled = !areNotificationsEnabled;
+                        data.subscription.enabled = !data.subscription.enabled;
                         togglePause();
                     }
                 }
             });
         } else {
-            areNotificationsEnabled = !areNotificationsEnabled;
+            data.subscription.enabled = !data.subscription.enabled;
             toast.error('Oops, something went wrong', {description: res.statusText});
         }
     }
@@ -67,7 +64,7 @@
                     Send email notifications.
                 </p>
             </div>
-            <Switch onCheckedChange={togglePause} bind:checked={areNotificationsEnabled} id="email-notification-switch"/>
+            <Switch onCheckedChange={togglePause} bind:checked={data.subscription.enabled} id="email-notification-switch"/>
         </div>
         <div>
             <div class="mb-4 grid grid-cols-[25px_1fr] gap-2 items-start pb-4 last:mb-0 last:pb-0">

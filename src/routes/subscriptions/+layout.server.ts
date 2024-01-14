@@ -7,7 +7,7 @@ type Subscription = {
 	latitude: number;
 	longitude: number;
 	address: string;
-	pause: boolean;
+	enabled: boolean;
 	createdAt: string;
 };
 
