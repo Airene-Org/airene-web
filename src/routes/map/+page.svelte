@@ -24,6 +24,7 @@
     import { Loader } from "lucide-svelte";
     import { Input } from "$lib/components/ui/input";
     import { toast } from "svelte-sonner";
+    import AlertTriangle from '$lib/Alert Triangle.png'
 
     export let data;
     export let form;
@@ -123,7 +124,7 @@
                 map.addLayer(layer, 'road-label')
             });
 
-            map.loadImage('/src/lib/Alert Triangle.png', (error, image) => {
+            map.loadImage(AlertTriangle, (error, image) => {
                 if (error) throw error;
                 if (!image) return;
 
